@@ -1,5 +1,6 @@
 import User from '../models/user.model';
 
+const bcrypt = require('bcryptjs');
 /**
  * Load user and append to req.
  */
@@ -29,12 +30,18 @@ function get(req, res) {
 function create(req, res, next) {
   const user = new User({
     username: req.body.username,
-    mobileNumber: req.body.mobileNumber
+    mobileNumber: req.body.mobileNumber,
+    password: req.body.password
   });
 
-  user.save()
-    .then(savedUser => res.json(savedUser))
-    .catch(e => next(e));
+  bcrypt.genSalt(10, (err, salt) => {
+    bcrypt.hash(user.password, salt, (error, hash) => {
+      user.password = hash;
+      user.save()
+        .then(savedUser => res.json(savedUser))
+        .catch(e => next(e));
+    });
+  });
 }
 
 /**
@@ -47,10 +54,16 @@ function update(req, res, next) {
   const user = req.user;
   user.username = req.body.username;
   user.mobileNumber = req.body.mobileNumber;
+  user.password = req.body.password;
 
-  user.save()
-    .then(savedUser => res.json(savedUser))
-    .catch(e => next(e));
+  bcrypt.genSalt(10, (err, salt) => {
+    bcrypt.hash(user.password, salt, (error, hash) => {
+      user.password = hash;
+      user.save()
+        .then(savedUser => res.json(savedUser))
+        .catch(e => next(e));
+    });
+  });
 }
 
 /**
